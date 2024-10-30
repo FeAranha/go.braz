@@ -34,6 +34,7 @@ import { getProject } from '@/http/routes/projects/get-project'
 import { getProjects } from '@/http/routes/projects/get-projects'
 import { updateProject } from '@/http/routes/projects/update-project'
 
+import { authenticateWithGoogle } from './routes/auth/authenticate-with-google'
 import { createAccount } from './routes/auth/create-account'
 import { getOrganizationBilling } from './routes/billing/get-organization-billing'
 import { acceptInvite } from './routes/invites/accept-invite'
@@ -83,6 +84,7 @@ app.register(fastifyCors)
 app.register(createAccount)
 app.register(authenticateWithPassword)
 app.register(authenticateWithGithub)
+app.register(authenticateWithGoogle)
 app.register(getProfile)
 app.register(requestPasswordRecover)
 app.register(resetPassword)
