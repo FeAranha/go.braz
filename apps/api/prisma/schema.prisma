@@ -146,7 +146,7 @@ model Project {
   ownerId String @map("owner_id")
 
   timeline   Timeline? @relation(fields: [timelineId], references: [id], onDelete: Cascade)
-  timelineId String    @unique @map("timeline_id")
+  timelineId String    @map("timeline_id")
 
   @@map("projects")
 }
