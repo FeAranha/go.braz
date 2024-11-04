@@ -122,23 +122,22 @@ enum Phase {
 }
 
 model Project {
-  id          String   @id @default(uuid())
-  name        String
-  description String
-  slug        String   @unique
-  avatarUrl   String?  @map("avatar_url")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  isLate                  Boolean @default(false) @map("is_late")
+  id                      String   @id @default(uuid())
+  name                    String
+  description             String
+  slug                    String   @unique
+  avatarUrl               String?  @map("avatar_url")
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+  isLate                  Boolean  @default(false) @map("is_late")
   phase                   Phase
-  taxesCollected          Boolean @default(false)
-  protocolSubmittedToCity Boolean @default(false)
-  cityProjectApproved     Boolean @default(false)
-  projectInExecution      Boolean @default(false)
-  cnoRegistered           Boolean @default(false)
-  SEROmeasured            Boolean @default(false)
-  cndRF                   Boolean @default(false)
+  taxesCollected          Boolean  @default(false)
+  protocolSubmittedToCity Boolean  @default(false)
+  cityProjectApproved     Boolean  @default(false)
+  projectInExecution      Boolean  @default(false)
+  cnoRegistered           Boolean  @default(false)
+  SEROmeasured            Boolean  @default(false)
+  cndRF                   Boolean  @default(false)
 
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   organizationId String       @map("organization_id")
@@ -146,8 +145,8 @@ model Project {
   owner   User   @relation(fields: [ownerId], references: [id])
   ownerId String @map("owner_id")
 
-  timeline   Timeline @relation(fields: [timelineId], references: [id], onDelete: Cascade)
-  timelineId String   @unique @map("timeline_id")
+  timeline   Timeline? @relation(fields: [timelineId], references: [id], onDelete: Cascade)
+  timelineId String    @unique @map("timeline_id")
 
   @@map("projects")
 }
@@ -158,10 +157,11 @@ model Timeline {
   updatedAt DateTime  @updatedAt @map("updated_at")
   startDate DateTime? @map("start_date")
   endDate   DateTime? @map("end_date")
-  Project   Project[]
 
-  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  serviceId String  @unique @map("service_id")
+  Project Project[]
+
+  service   Service? @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  serviceId String   @map("service_id")
 
   @@map("timelines")
 }
