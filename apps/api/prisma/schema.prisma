@@ -115,6 +115,12 @@ model Organization {
   @@map("organizations")
 }
 
+enum Phase {
+  PRELIMINARY
+  STUDY
+  CORRECTION
+}
+
 model Project {
   id          String   @id @default(uuid())
   name        String
@@ -124,11 +130,51 @@ model Project {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
+  isLate                  Boolean @default(false) @map("is_late")
+  phase                   Phase
+  taxesCollected          Boolean @default(false)
+  protocolSubmittedToCity Boolean @default(false)
+  cityProjectApproved     Boolean @default(false)
+  projectInExecution      Boolean @default(false)
+  cnoRegistered           Boolean @default(false)
+  SEROmeasured            Boolean @default(false)
+  cndRF                   Boolean @default(false)
+
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   organizationId String       @map("organization_id")
 
   owner   User   @relation(fields: [ownerId], references: [id])
   ownerId String @map("owner_id")
 
+  timeline   Timeline @relation(fields: [timelineId], references: [id], onDelete: Cascade)
+  timelineId String   @unique @map("timeline_id")
+
   @@map("projects")
+}
+
+model Timeline {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  startDate DateTime? @map("start_date")
+  endDate   DateTime? @map("end_date")
+  Project   Project[]
+
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  serviceId String  @unique @map("service_id")
+
+  @@map("timelines")
+}
+
+model Service {
+  id          String   @id @default(uuid())
+  item        Int
+  name        String
+  description String
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  Timeline Timeline[]
+
+  @@map("services")
 }
