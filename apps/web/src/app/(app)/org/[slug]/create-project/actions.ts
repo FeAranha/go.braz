@@ -11,6 +11,16 @@ const projectSchema = z.object({
     .string()
     .min(4, { message: 'Please, incluide at least 4 characters.' }),
   description: z.string(),
+  phase: z.enum(['PRELIMINARY', 'STUDY', 'CORRECTION']),
+  timelineId: z.string().uuid().optional(),
+  cityProjectApproved: z.boolean(),
+  cndRF: z.boolean(),
+  cnoRegistered: z.boolean(),
+  isLate: z.boolean(),
+  projectInExecution: z.boolean(),
+  SEROmeasured: z.boolean(),
+  protocolSubmittedToCity: z.boolean(),
+  taxesCollected: z.boolean(),
 })
 
 export async function createProjectAction(data: FormData) {
@@ -22,13 +32,10 @@ export async function createProjectAction(data: FormData) {
     return { success: false, message: null, errors }
   }
 
-  const { name, description } = result.data
-
   try {
     await createProject({
       org: getCurrentOrg()!,
-      name,
-      description,
+      ...result.data,
     })
   } catch (err) {
     if (err instanceof HTTPError) {

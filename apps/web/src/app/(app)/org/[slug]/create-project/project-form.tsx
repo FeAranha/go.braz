@@ -69,6 +69,63 @@ export function ProjectForm() {
         )}
       </div>
 
+      <div className="space-y-1">
+        <Label htmlFor="phase">Phase: </Label>
+        <select className="text-sm" name="phase" id="phase">
+          <option value="PRELIMINARY">Preliminary</option>
+          <option value="STUDY">Study</option>
+          <option value="CORRECTION">Correction</option>
+        </select>
+      </div>
+
+      <div className="space-y-1">
+        <Label htmlFor="timelineId">Timeline ID (Optional)</Label>
+        <Input
+          name="timelineId"
+          id="timelineId"
+          placeholder="Enter timeline ID"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <label>
+          <input className="mr-2" type="checkbox" name="cityProjectApproved" />
+          City Project Approved
+        </label>
+        <label>
+          <input className="mr-2" type="checkbox" name="cndRF" />
+          CND RF
+        </label>
+        <label>
+          <input className="mr-2" type="checkbox" name="cnoRegistered" />
+          CNO Registered
+        </label>
+        <label>
+          <input className="mr-2" type="checkbox" name="isLate" />
+          Is Late
+        </label>
+        <label>
+          <input className="mr-2" type="checkbox" name="projectInExecution" />
+          Project In Execution
+        </label>
+        <label>
+          <input className="mr-2" type="checkbox" name="SEROmeasured" />
+          SERO Measured
+        </label>
+        <label>
+          <input
+            className="mr-2"
+            type="checkbox"
+            name="protocolSubmittedToCity"
+          />
+          Protocol Submitted to City
+        </label>
+        <label>
+          <input className="mr-2" type="checkbox" name="taxesCollected" />
+          Taxes Collected
+        </label>
+      </div>
+
       <Button className="w-full" type="submit" disabled={isPending}>
         {isPending ? (
           <Loader2 className="size-4 animate-spin" />
