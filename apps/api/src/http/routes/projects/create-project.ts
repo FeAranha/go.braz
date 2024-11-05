@@ -22,6 +22,22 @@ export async function createProject(app: FastifyInstance) {
           body: z.object({
             name: z.string(),
             description: z.string(),
+            phase: z.enum(['PRELIMINARY', 'STUDY', 'CORRECTION']),
+            cityProjectApproved: z.boolean(),
+            cndRF: z.boolean(),
+            cnoRegistered: z.boolean(),
+            isLate: z.boolean(),
+            projectInExecution: z.boolean(),
+            SEROmeasured: z.boolean(),
+            protocolSubmittedToCity: z.boolean(),
+            taxesCollected: z.boolean(),
+            timelineId: z.string().uuid(),
+            // timeline: z
+            //   .object({
+            //     startDate: z.string().optional(),
+            //     endDate: z.string().optional(),
+            //   })
+            //   .optional(),
           }),
           params: z.object({
             slug: z.string(),
@@ -47,7 +63,20 @@ export async function createProject(app: FastifyInstance) {
           )
         }
 
-        const { name, description } = request.body
+        const {
+          name,
+          description,
+          phase,
+          cityProjectApproved,
+          cndRF,
+          cnoRegistered,
+          isLate,
+          projectInExecution,
+          SEROmeasured,
+          protocolSubmittedToCity,
+          taxesCollected,
+          timelineId,
+        } = request.body
 
         const project = await prisma.project.create({
           data: {
@@ -56,6 +85,28 @@ export async function createProject(app: FastifyInstance) {
             description,
             organizationId: organization.id,
             ownerId: userId,
+            phase,
+            cityProjectApproved,
+            cndRF,
+            cnoRegistered,
+            isLate,
+            projectInExecution,
+            SEROmeasured,
+            protocolSubmittedToCity,
+            taxesCollected,
+            timelineId,
+            // timeline: timeline
+            //   ? {
+            //       create: {
+            //         startDate: timeline.startDate
+            //           ? new Date(timeline.startDate)
+            //           : undefined,
+            //         endDate: timeline.endDate
+            //           ? new Date(timeline.endDate)
+            //           : undefined,
+            //       },
+            //     }
+            //   : undefined,
           },
         })
 
