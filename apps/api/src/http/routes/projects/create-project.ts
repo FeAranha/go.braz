@@ -31,7 +31,12 @@ export async function createProject(app: FastifyInstance) {
             SEROmeasured: z.boolean(),
             protocolSubmittedToCity: z.boolean(),
             taxesCollected: z.boolean(),
-            timelineId: z.string().uuid().optional(),
+            timeline: z
+              .object({
+                startDate: z.string().optional(),
+                endDate: z.string().optional(),
+              })
+              .optional(),
           }),
           params: z.object({
             slug: z.string(),
@@ -69,7 +74,7 @@ export async function createProject(app: FastifyInstance) {
           SEROmeasured,
           protocolSubmittedToCity,
           taxesCollected,
-          timelineId,
+          timeline,
         } = request.body
 
         const project = await prisma.project.create({
@@ -88,9 +93,26 @@ export async function createProject(app: FastifyInstance) {
             SEROmeasured,
             protocolSubmittedToCity,
             taxesCollected,
-            timelineId,
           },
         })
+
+        if (timeline) {
+          const createdTimeline = await prisma.timeline.create({
+            data: {
+              startDate: timeline.startDate
+                ? new Date(timeline.startDate)
+                : undefined,
+              endDate: timeline.endDate
+                ? new Date(timeline.endDate)
+                : undefined,
+            },
+          })
+
+          await prisma.project.update({
+            where: { id: project.id },
+            data: { timelineId: createdTimeline.id },
+          })
+        }
 
         return reply.status(201).send({
           projectId: project.id,
