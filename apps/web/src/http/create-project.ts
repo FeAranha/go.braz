@@ -22,6 +22,11 @@ export async function createProject({
   org,
   ...projectData
 }: CreateProjectRequest): Promise<CreateProjectResponse> {
+  const dataToSend = { ...projectData }
+  if (!dataToSend.timelineId) {
+    delete dataToSend.timelineId
+  }
+
   await api.post(`organizations/${org}/projects`, {
     json: projectData,
   })

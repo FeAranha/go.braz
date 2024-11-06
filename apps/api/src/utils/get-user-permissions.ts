@@ -5,9 +5,8 @@ export function getUserPermissions(userId: string, role: Role) {
     id: userId,
     role,
   })
-  // DEBUG user ability
-  console.log('authUser=>', authUser)
+
   const ability = defineAbilityFor(authUser)
-  console.log('ability=>', ability)
+
   return ability
 }
