@@ -21,21 +21,42 @@ const projectSchema = z.object({
   SEROmeasured: z.boolean(),
   protocolSubmittedToCity: z.boolean(),
   taxesCollected: z.boolean(),
+  timeline: z
+    .object({
+      startDate: z.string().optional(),
+      endDate: z.string().optional(),
+    })
+    .optional(),
 })
 
 export async function createProjectAction(data: FormData) {
+  console.log('Received data:', Object.fromEntries(data))
+
   const result = projectSchema.safeParse(Object.fromEntries(data))
 
   if (!result.success) {
     const errors = result.error.flatten().fieldErrors
+    console.error('Validation errors:', errors)
 
     return { success: false, message: null, errors }
   }
 
+  const { timeline, ...projectData } = result.data
+
   try {
     await createProject({
       org: getCurrentOrg()!,
-      ...result.data,
+      ...projectData,
+      timeline: timeline
+        ? {
+            startDate: timeline.startDate
+              ? new Date(timeline.startDate).toISOString()
+              : undefined,
+            endDate: timeline.endDate
+              ? new Date(timeline.endDate).toISOString()
+              : undefined,
+          }
+        : undefined,
     })
   } catch (err) {
     if (err instanceof HTTPError) {

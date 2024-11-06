@@ -14,6 +14,10 @@ interface CreateProjectRequest {
   SEROmeasured: boolean
   protocolSubmittedToCity: boolean
   taxesCollected: boolean
+  timeline?: {
+    startDate?: string
+    endDate?: string
+  }
 }
 
 type CreateProjectResponse = void
@@ -23,11 +27,12 @@ export async function createProject({
   ...projectData
 }: CreateProjectRequest): Promise<CreateProjectResponse> {
   const dataToSend = { ...projectData }
+
   if (!dataToSend.timelineId) {
     delete dataToSend.timelineId
   }
 
   await api.post(`organizations/${org}/projects`, {
-    json: projectData,
+    json: dataToSend,
   })
 }
