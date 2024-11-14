@@ -3,7 +3,7 @@
 import { AlertTriangle, Loader2 } from 'lucide-react'
 import Image from 'next/image'
 import { useParams } from 'next/navigation'
-import { startTransition, useState } from 'react'
+import { useState } from 'react'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -70,31 +70,40 @@ export function ProjectForm() {
 
   const handleSubmitWithDebug = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const formData = new FormData(e.currentTarget)
 
-    Object.entries(checkboxState).forEach(([key, value]) => {
-      formData.set(key, value ? 'on' : 'off')
-    })
-
-    const startDate = formData.get('timeline[startDate]')
-    const endDate = formData.get('timeline[endDate]')
-    if (!startDate || !endDate) {
-      formData.delete('timeline[startDate]')
-      formData.delete('timeline[endDate]')
+    const data = {
+      name: (e.currentTarget.elements.namedItem('name') as HTMLInputElement)
+        .value,
+      description: (
+        e.currentTarget.elements.namedItem('description') as HTMLInputElement
+      ).value,
+      phase: (e.currentTarget.elements.namedItem('phase') as HTMLSelectElement)
+        .value,
+      timeline: {
+        startDate:
+          (
+            e.currentTarget.elements.namedItem(
+              'timeline[startDate]',
+            ) as HTMLInputElement
+          ).value || undefined,
+        endDate:
+          (
+            e.currentTarget.elements.namedItem(
+              'timeline[endDate]',
+            ) as HTMLInputElement
+          ).value || undefined,
+      },
+      ...checkboxState, // Usa os valores booleanos diretamente
     }
 
-    // Debug: Mostra o conteúdo completo do FormData no console
-    const formDataObject = Object.fromEntries(formData.entries())
-    console.log('Form submitted with data:', formDataObject)
+    console.log('Form submitted with data:', data)
 
-    startTransition(async () => {
-      try {
-        await handleSubmit(formData)
-        console.log('Form submitted with data:', Object.fromEntries(formData))
-      } catch (error) {
-        console.error('Error submitting form:', error)
-      }
-    })
+    try {
+      await handleSubmit(data)
+      console.log('Form successfully submitted.')
+    } catch (error) {
+      console.error('Error submitting form:', error)
+    }
   }
 
   return (
