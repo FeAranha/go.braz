@@ -30,13 +30,13 @@ const projectSchema = z.object({
 })
 
 export async function createProjectAction(data: FormData) {
-  console.log('Received data:', Object.fromEntries(data))
+  console.log('Received data=>', Object.fromEntries(data))
 
   const result = projectSchema.safeParse(Object.fromEntries(data))
 
   if (!result.success) {
     const errors = result.error.flatten().fieldErrors
-    console.error('Validation errors:', errors)
+    console.error('Validation errors=>', errors)
 
     return { success: false, message: null, errors }
   }

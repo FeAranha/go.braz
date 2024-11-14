@@ -13,25 +13,41 @@ export function useFormState(
   initialState?: FormState,
 ) {
   const [isPending, startTransition] = useTransition()
-
   const [formState, setFormState] = useState(
     initialState ?? { success: false, message: null, errors: null },
   )
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
+    console.log('Tipo de evento=>', event)
+
+    if (event && typeof event.preventDefault === 'function') {
+      event.preventDefault()
+    } else {
+      console.error('O evento não possui preventDefault.')
+      return
+    }
 
     const form = event.currentTarget
     const data = new FormData(form)
 
     startTransition(async () => {
-      const state = await action(data)
+      try {
+        const state = await action(data)
+        console.log('state=>', state)
 
-      if (state.success && onSuccess) {
-        await onSuccess()
+        if (state.success && onSuccess) {
+          await onSuccess()
+        }
+
+        setFormState(state)
+      } catch (error) {
+        console.error('Erro ao enviar o formulário:', error)
+        setFormState({
+          success: false,
+          message: 'Falha ao enviar o formulário.',
+          errors: { general: ['Erro inesperado. Tente novamente.'] },
+        })
       }
-
-      setFormState(state)
     })
 
     requestFormReset(form)

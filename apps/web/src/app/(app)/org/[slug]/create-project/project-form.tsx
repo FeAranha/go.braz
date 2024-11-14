@@ -14,19 +14,51 @@ import { queryClient } from '@/lib/react-query'
 
 import { createProjectAction } from './actions'
 
+type CheckboxState = {
+  cityProjectApproved: boolean
+  cndRF: boolean
+  cnoRegistered: boolean
+  isLate: boolean
+  projectInExecution: boolean
+  SEROmeasured: boolean
+  protocolSubmittedToCity: boolean
+  taxesCollected: boolean
+}
+
+const checkboxLabels: Record<keyof CheckboxState, string> = {
+  cityProjectApproved: 'City Project Approved',
+  cndRF: 'CND RF',
+  cnoRegistered: 'CNO Registered',
+  isLate: 'Is Late',
+  projectInExecution: 'Project In Execution',
+  SEROmeasured: 'SERO Measured',
+  protocolSubmittedToCity: 'Protocol Submitted To City',
+  taxesCollected: 'Taxes Collected',
+}
+
 export function ProjectForm() {
   const { slug: org } = useParams<{ slug: string }>()
-  const [{ errors, message, success }, handleSubmit, isPending] = useFormState(
+
+  const [formState, handleSubmit, isPending] = useFormState(
     createProjectAction,
     () => {
       queryClient.invalidateQueries({
         queryKey: [org, 'projects'],
       })
     },
-  )
+  ) as unknown as [
+    {
+      errors: Record<string, string[]>
+      message: string | null
+      success: boolean
+    },
+    (data: FormData) => Promise<void>,
+    boolean,
+  ]
 
-  // State para checkboxes
-  const [checkboxState, setCheckboxState] = useState({
+  const { errors, message, success } = formState
+
+  const [checkboxState, setCheckboxState] = useState<CheckboxState>({
     cityProjectApproved: false,
     cndRF: false,
     cnoRegistered: false,
@@ -40,10 +72,35 @@ export function ProjectForm() {
   const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = event.target
     setCheckboxState((prev) => ({ ...prev, [name]: checked }))
+    console.log(`Checkbox ${name} changed to:`, checked)
+  }
+
+  const debugFormData = (formData: FormData) => {
+    for (const pair of formData.entries()) {
+      console.log(pair[0] + ': ' + pair[1])
+    }
+  }
+
+  const handleSubmitWithDebug = async (e: React.FormEvent<HTMLFormElement>) => {
+    console.log('click on=> Save Project')
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget)
+
+    Object.entries(checkboxState).forEach(([key, value]) => {
+      formData.append(key, value ? 'on' : 'off')
+    })
+
+    debugFormData(formData)
+
+    try {
+      await handleSubmit(formData)
+    } catch (error) {
+      console.error('Error submitting form:', error)
+    }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmitWithDebug} className="space-y-4">
       {message && (
         <Alert variant={success ? 'success' : 'destructive'}>
           <AlertTriangle className="size-4" />
@@ -85,7 +142,6 @@ export function ProjectForm() {
         </select>
       </div>
 
-      {/* Timeline fields for optional start and end dates */}
       <div className="space-y-1">
         <Label htmlFor="timelineStartDate">
           Timeline Start Date (Optional)
@@ -100,17 +156,16 @@ export function ProjectForm() {
 
       <div className="grid grid-cols-2 gap-4">
         {Object.keys(checkboxState).map((key) => (
-          <label key={key}>
+          <label key={key} htmlFor={key}>
             <input
               className="mr-2"
               type="checkbox"
               name={key}
-              checked={checkboxState[key as keyof typeof checkboxState]}
+              id={key}
+              checked={checkboxState[key as keyof CheckboxState]}
               onChange={handleCheckboxChange}
             />
-            {key
-              .replace(/([A-Z])/g, ' $1')
-              .replace(/^./, (str) => str.toUpperCase())}
+            {checkboxLabels[key as keyof CheckboxState]}
           </label>
         ))}
       </div>
