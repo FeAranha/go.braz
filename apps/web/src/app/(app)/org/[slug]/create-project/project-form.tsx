@@ -1,8 +1,9 @@
 'use client'
 
 import { AlertTriangle, Loader2 } from 'lucide-react'
+import Image from 'next/image'
 import { useParams } from 'next/navigation'
-import { useState } from 'react'
+import { startTransition, useState } from 'react'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -15,14 +16,14 @@ import { queryClient } from '@/lib/react-query'
 import { createProjectAction } from './actions'
 
 type CheckboxState = {
-  cityProjectApproved: boolean
-  cndRF: boolean
-  cnoRegistered: boolean
-  isLate: boolean
-  projectInExecution: boolean
-  SEROmeasured: boolean
-  protocolSubmittedToCity: boolean
-  taxesCollected: boolean
+  cityProjectApproved?: boolean
+  cndRF?: boolean
+  cnoRegistered?: boolean
+  isLate?: boolean
+  projectInExecution?: boolean
+  SEROmeasured?: boolean
+  protocolSubmittedToCity?: boolean
+  taxesCollected?: boolean
 }
 
 const checkboxLabels: Record<keyof CheckboxState, string> = {
@@ -46,15 +47,7 @@ export function ProjectForm() {
         queryKey: [org, 'projects'],
       })
     },
-  ) as unknown as [
-    {
-      errors: Record<string, string[]>
-      message: string | null
-      success: boolean
-    },
-    (data: FormData) => Promise<void>,
-    boolean,
-  ]
+  )
 
   const { errors, message, success } = formState
 
@@ -75,28 +68,33 @@ export function ProjectForm() {
     console.log(`Checkbox ${name} changed to:`, checked)
   }
 
-  const debugFormData = (formData: FormData) => {
-    for (const pair of formData.entries()) {
-      console.log(pair[0] + ': ' + pair[1])
-    }
-  }
-
   const handleSubmitWithDebug = async (e: React.FormEvent<HTMLFormElement>) => {
-    console.log('click on=> Save Project')
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
 
     Object.entries(checkboxState).forEach(([key, value]) => {
-      formData.append(key, value ? 'on' : 'off')
+      formData.set(key, value ? 'on' : 'off')
     })
 
-    debugFormData(formData)
-
-    try {
-      await handleSubmit(formData)
-    } catch (error) {
-      console.error('Error submitting form:', error)
+    const startDate = formData.get('timeline[startDate]')
+    const endDate = formData.get('timeline[endDate]')
+    if (!startDate || !endDate) {
+      formData.delete('timeline[startDate]')
+      formData.delete('timeline[endDate]')
     }
+
+    // Debug: Mostra o conteúdo completo do FormData no console
+    const formDataObject = Object.fromEntries(formData.entries())
+    console.log('Form submitted with data:', formDataObject)
+
+    startTransition(async () => {
+      try {
+        await handleSubmit(formData)
+        console.log('Form submitted with data:', Object.fromEntries(formData))
+      } catch (error) {
+        console.error('Error submitting form:', error)
+      }
+    })
   }
 
   return (
@@ -112,6 +110,14 @@ export function ProjectForm() {
           </AlertDescription>
         </Alert>
       )}
+
+      <Image
+        src="/_next/static/media/rocketseat-icon.c712abd7.svg"
+        alt="Rocketseat Icon"
+        width={50}
+        height={50}
+        style={{ objectFit: 'contain' }}
+      />
 
       <div className="space-y-1">
         <Label htmlFor="name">Project Name</Label>

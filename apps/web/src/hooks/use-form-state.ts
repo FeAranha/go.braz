@@ -1,4 +1,4 @@
-import { FormEvent, useState, useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { requestFormReset } from 'react-dom'
 
 interface FormState {
@@ -17,28 +17,13 @@ export function useFormState(
     initialState ?? { success: false, message: null, errors: null },
   )
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    console.log('Tipo de evento=>', event)
-
-    if (event && typeof event.preventDefault === 'function') {
-      event.preventDefault()
-    } else {
-      console.error('O evento não possui preventDefault.')
-      return
-    }
-
-    const form = event.currentTarget
-    const data = new FormData(form)
-
+  async function handleSubmit(data: FormData) {
     startTransition(async () => {
       try {
         const state = await action(data)
-        console.log('state=>', state)
-
         if (state.success && onSuccess) {
           await onSuccess()
         }
-
         setFormState(state)
       } catch (error) {
         console.error('Erro ao enviar o formulário:', error)
@@ -50,7 +35,8 @@ export function useFormState(
       }
     })
 
-    requestFormReset(form)
+    const form = document.querySelector('form')
+    if (form) requestFormReset(form)
   }
 
   return [formState, handleSubmit, isPending] as const
