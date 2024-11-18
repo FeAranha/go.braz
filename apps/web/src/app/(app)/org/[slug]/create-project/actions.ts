@@ -12,7 +12,6 @@ const projectSchema = z.object({
     .min(4, { message: 'Please, incluide at least 4 characters.' }),
   description: z.string(),
   phase: z.enum(['PRELIMINARY', 'STUDY', 'CORRECTION']),
-  timelineId: z.string().uuid().optional(),
   cityProjectApproved: z.boolean(),
   cndRF: z.boolean(),
   cnoRegistered: z.boolean(),
@@ -32,7 +31,8 @@ const projectSchema = z.object({
 export async function createProjectAction(data: FormData) {
   console.log('Received data=>', Object.fromEntries(data))
 
-  const result = projectSchema.safeParse(Object.fromEntries(data))
+  const rawData = Object.fromEntries(data)
+  const result = projectSchema.safeParse(rawData)
 
   if (!result.success) {
     const errors = result.error.flatten().fieldErrors

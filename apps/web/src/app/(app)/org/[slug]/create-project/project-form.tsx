@@ -76,12 +76,8 @@ export function ProjectForm() {
     console.log('Form submitted with data:', formData)
 
     Object.entries(checkboxState).forEach(([key, value]) => {
-      formData.append(key, JSON.stringify(value))
+      formData.append(key, value.toString())
     })
-
-    for (const [key, value] of formData.entries()) {
-      console.log(`${key}: ${value}`)
-    }
 
     try {
       await handleSubmit(formData)
