@@ -71,36 +71,21 @@ export function ProjectForm() {
   const handleSubmitWithDebug = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
-    const data = {
-      name: (e.currentTarget.elements.namedItem('name') as HTMLInputElement)
-        .value,
-      description: (
-        e.currentTarget.elements.namedItem('description') as HTMLInputElement
-      ).value,
-      phase: (e.currentTarget.elements.namedItem('phase') as HTMLSelectElement)
-        .value,
-      timeline: {
-        startDate:
-          (
-            e.currentTarget.elements.namedItem(
-              'timeline[startDate]',
-            ) as HTMLInputElement
-          ).value || undefined,
-        endDate:
-          (
-            e.currentTarget.elements.namedItem(
-              'timeline[endDate]',
-            ) as HTMLInputElement
-          ).value || undefined,
-      },
-      ...checkboxState, // Usa os valores booleanos diretamente
+    const formData = new FormData(e.currentTarget)
+
+    console.log('Form submitted with data:', formData)
+
+    Object.entries(checkboxState).forEach(([key, value]) => {
+      formData.append(key, JSON.stringify(value))
+    })
+
+    for (const [key, value] of formData.entries()) {
+      console.log(`${key}: ${value}`)
     }
 
-    console.log('Form submitted with data:', data)
-
     try {
-      await handleSubmit(data)
-      console.log('Form successfully submitted.')
+      await handleSubmit(formData)
+      console.log('Form successfully submitted.=>', formData)
     } catch (error) {
       console.error('Error submitting form:', error)
     }
