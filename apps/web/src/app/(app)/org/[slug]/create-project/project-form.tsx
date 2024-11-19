@@ -1,6 +1,7 @@
 'use client'
 
 import { AlertTriangle, Loader2 } from 'lucide-react'
+import Image from 'next/image'
 import { useParams } from 'next/navigation'
 import { useState } from 'react'
 
@@ -15,14 +16,14 @@ import { queryClient } from '@/lib/react-query'
 import { createProjectAction } from './actions'
 
 type CheckboxState = {
-  cityProjectApproved: boolean
-  cndRF: boolean
-  cnoRegistered: boolean
-  isLate: boolean
-  projectInExecution: boolean
-  SEROmeasured: boolean
-  protocolSubmittedToCity: boolean
-  taxesCollected: boolean
+  cityProjectApproved?: boolean
+  cndRF?: boolean
+  cnoRegistered?: boolean
+  isLate?: boolean
+  projectInExecution?: boolean
+  SEROmeasured?: boolean
+  protocolSubmittedToCity?: boolean
+  taxesCollected?: boolean
 }
 
 const checkboxLabels: Record<keyof CheckboxState, string> = {
@@ -46,15 +47,7 @@ export function ProjectForm() {
         queryKey: [org, 'projects'],
       })
     },
-  ) as unknown as [
-    {
-      errors: Record<string, string[]>
-      message: string | null
-      success: boolean
-    },
-    (data: FormData) => Promise<void>,
-    boolean,
-  ]
+  )
 
   const { errors, message, success } = formState
 
@@ -72,35 +65,47 @@ export function ProjectForm() {
   const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = event.target
     setCheckboxState((prev) => ({ ...prev, [name]: checked }))
-    console.log(`Checkbox ${name} changed to:`, checked)
   }
 
-  const debugFormData = (formData: FormData) => {
-    for (const pair of formData.entries()) {
-      console.log(pair[0] + ': ' + pair[1])
-    }
-  }
-
-  const handleSubmitWithDebug = async (e: React.FormEvent<HTMLFormElement>) => {
-    console.log('click on=> Save Project')
+  const handleSubmitWithValidation = async (
+    e: React.FormEvent<HTMLFormElement>,
+  ) => {
     e.preventDefault()
-    const formData = new FormData(e.currentTarget)
 
-    Object.entries(checkboxState).forEach(([key, value]) => {
-      formData.append(key, value ? 'on' : 'off')
-    })
-
-    debugFormData(formData)
+    const formElement = e.currentTarget
 
     try {
-      await handleSubmit(formData)
+      const formData = new FormData(formElement)
+
+      const data = {
+        name: formData.get('name') as string,
+        description: formData.get('description') as string,
+        phase: formData.get('phase') as string,
+        timeline: {
+          startDate: formData.get('timeline[startDate]') as string,
+          endDate: formData.get('timeline[endDate]') as string,
+        },
+        cityProjectApproved: formData.get('cityProjectApproved') === 'true',
+        cndRF: formData.get('cndRF') === 'true',
+        cnoRegistered: formData.get('cnoRegistered') === 'true',
+        isLate: formData.get('isLate') === 'true',
+        projectInExecution: formData.get('projectInExecution') === 'true',
+        SEROmeasured: formData.get('SEROmeasured') === 'true',
+        protocolSubmittedToCity:
+          formData.get('protocolSubmittedToCity') === 'true',
+        taxesCollected: formData.get('taxesCollected') === 'true',
+      }
+
+      console.log('data => ', data)
+
+      await handleSubmit(e)
     } catch (error) {
-      console.error('Error submitting form:', error)
+      console.error('Erro ao enviar formulário:', error)
     }
   }
 
   return (
-    <form onSubmit={handleSubmitWithDebug} className="space-y-4">
+    <form onSubmit={handleSubmitWithValidation} className="space-y-4">
       {message && (
         <Alert variant={success ? 'success' : 'destructive'}>
           <AlertTriangle className="size-4" />
@@ -112,6 +117,14 @@ export function ProjectForm() {
           </AlertDescription>
         </Alert>
       )}
+
+      <Image
+        src="/_next/static/media/rocketseat-icon.c712abd7.svg"
+        alt="Rocketseat Icon"
+        width={50}
+        height={50}
+        style={{ objectFit: 'contain' }}
+      />
 
       <div className="space-y-1">
         <Label htmlFor="name">Project Name</Label>
