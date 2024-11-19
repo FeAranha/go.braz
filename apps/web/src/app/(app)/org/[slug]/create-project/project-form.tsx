@@ -1,9 +1,8 @@
 'use client'
 
 import { AlertTriangle, Loader2 } from 'lucide-react'
-import Image from 'next/image'
 import { useParams } from 'next/navigation'
-import { useState } from 'react'
+import { startTransition, useState } from 'react'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -43,8 +42,10 @@ export function ProjectForm() {
   const [formState, handleSubmit, isPending] = useFormState(
     createProjectAction,
     () => {
-      queryClient.invalidateQueries({
-        queryKey: [org, 'projects'],
+      startTransition(() => {
+        queryClient.invalidateQueries({
+          queryKey: [org, 'projects'],
+        })
       })
     },
   )
@@ -77,30 +78,23 @@ export function ProjectForm() {
     try {
       const formData = new FormData(formElement)
 
-      const data = {
+      const formDataJS = {
         name: formData.get('name') as string,
         description: formData.get('description') as string,
         phase: formData.get('phase') as string,
         timeline: {
-          startDate: formData.get('timeline[startDate]') as string,
-          endDate: formData.get('timeline[endDate]') as string,
+          startDate: (formData.get('timeline[startDate]') as string) || null,
+          endDate: (formData.get('timeline[endDate]') as string) || null,
         },
-        cityProjectApproved: formData.get('cityProjectApproved') === 'true',
-        cndRF: formData.get('cndRF') === 'true',
-        cnoRegistered: formData.get('cnoRegistered') === 'true',
-        isLate: formData.get('isLate') === 'true',
-        projectInExecution: formData.get('projectInExecution') === 'true',
-        SEROmeasured: formData.get('SEROmeasured') === 'true',
-        protocolSubmittedToCity:
-          formData.get('protocolSubmittedToCity') === 'true',
-        taxesCollected: formData.get('taxesCollected') === 'true',
+        ...checkboxState,
       }
 
-      console.log('data => ', data)
+      console.log('Processed FormData:', formDataJS)
 
       await handleSubmit(e)
+      console.log('Form successfully submitted!')
     } catch (error) {
-      console.error('Erro ao enviar formulário:', error)
+      console.error('Error submitting form:', error)
     }
   }
 
@@ -117,14 +111,6 @@ export function ProjectForm() {
           </AlertDescription>
         </Alert>
       )}
-
-      <Image
-        src="/_next/static/media/rocketseat-icon.c712abd7.svg"
-        alt="Rocketseat Icon"
-        width={50}
-        height={50}
-        style={{ objectFit: 'contain' }}
-      />
 
       <div className="space-y-1">
         <Label htmlFor="name">Project Name</Label>
@@ -182,6 +168,17 @@ export function ProjectForm() {
           </label>
         ))}
       </div>
+
+      {Object.keys(errors || {}).map((key) =>
+        checkboxLabels[key as keyof CheckboxState] ? (
+          <p
+            key={key}
+            className="text-xs font-medium text-red-500 dark:text-red-400"
+          >
+            {checkboxLabels[key as keyof CheckboxState]}: {errors?.[key]?.[0]}
+          </p>
+        ) : null,
+      )}
 
       <Button className="w-full" type="submit" disabled={isPending}>
         {isPending ? (
