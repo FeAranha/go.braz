@@ -9,7 +9,7 @@ import { createProject } from '@/http/create-project'
 const projectSchema = z.object({
   name: z
     .string()
-    .min(4, { message: 'Please, incluide at least 4 characters.' }),
+    .min(4, { message: 'Please, include at least 4 characters.' }),
   description: z.string(),
   phase: z.enum(['PRELIMINARY', 'STUDY', 'CORRECTION']),
   timelineId: z.string().uuid().optional(),
@@ -32,7 +32,20 @@ const projectSchema = z.object({
 export async function createProjectAction(data: FormData) {
   console.log('Received data=>', Object.fromEntries(data))
 
-  const result = projectSchema.safeParse(Object.fromEntries(data))
+  const plainObject: Record<string, string | boolean> = {}
+  for (const [key, value] of data.entries()) {
+    if (value === 'true') {
+      plainObject[key] = true
+    } else if (value === 'false') {
+      plainObject[key] = false
+    } else if (typeof value === 'string') {
+      plainObject[key] = value
+    }
+  }
+
+  console.log('Converted Object with Booleans=>', plainObject)
+
+  const result = projectSchema.safeParse(plainObject)
 
   if (!result.success) {
     const errors = result.error.flatten().fieldErrors
@@ -44,6 +57,26 @@ export async function createProjectAction(data: FormData) {
   const { timeline, ...projectData } = result.data
 
   try {
+    const preparedFormData = new FormData()
+    Object.entries(projectData).forEach(([key, value]) => {
+      if (typeof value === 'boolean') {
+        preparedFormData.append(key, value.toString())
+      } else if (value !== undefined && value !== null) {
+        preparedFormData.append(key, value as string)
+      }
+    })
+
+    if (timeline) {
+      preparedFormData.append(
+        'timeline[startDate]',
+        timeline.startDate ? new Date(timeline.startDate).toISOString() : '',
+      )
+      preparedFormData.append(
+        'timeline[endDate]',
+        timeline.endDate ? new Date(timeline.endDate).toISOString() : '',
+      )
+    }
+
     await createProject({
       org: getCurrentOrg()!,
       ...projectData,

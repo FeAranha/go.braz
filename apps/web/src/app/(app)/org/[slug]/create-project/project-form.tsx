@@ -1,8 +1,10 @@
 'use client'
 
-import { AlertTriangle, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { useParams } from 'next/navigation'
-import { startTransition, useState } from 'react'
+import { useState } from 'react'
+import { z } from 'zod'
+import { zfd } from 'zod-form-data'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -14,18 +16,23 @@ import { queryClient } from '@/lib/react-query'
 
 import { createProjectAction } from './actions'
 
-type CheckboxState = {
-  cityProjectApproved?: boolean
-  cndRF?: boolean
-  cnoRegistered?: boolean
-  isLate?: boolean
-  projectInExecution?: boolean
-  SEROmeasured?: boolean
-  protocolSubmittedToCity?: boolean
-  taxesCollected?: boolean
-}
+const ProjectFormSchema = zfd.formData({
+  name: zfd.text(z.string().min(1, 'Project name is required')),
+  description: zfd.text(z.string().min(1, 'Description is required')),
+  phase: zfd.text(z.enum(['PRELIMINARY', 'STUDY', 'CORRECTION'])),
+  timelineStartDate: zfd.text(z.string().optional()),
+  timelineEndDate: zfd.text(z.string().optional()),
+  cityProjectApproved: zfd.checkbox(),
+  cndRF: zfd.checkbox(),
+  cnoRegistered: zfd.checkbox(),
+  isLate: zfd.checkbox(),
+  projectInExecution: zfd.checkbox(),
+  SEROmeasured: zfd.checkbox(),
+  protocolSubmittedToCity: zfd.checkbox(),
+  taxesCollected: zfd.checkbox(),
+})
 
-const checkboxLabels: Record<keyof CheckboxState, string> = {
+const checkboxLabels = {
   cityProjectApproved: 'City Project Approved',
   cndRF: 'CND RF',
   cnoRegistered: 'CNO Registered',
@@ -34,159 +41,178 @@ const checkboxLabels: Record<keyof CheckboxState, string> = {
   SEROmeasured: 'SERO Measured',
   protocolSubmittedToCity: 'Protocol Submitted To City',
   taxesCollected: 'Taxes Collected',
-}
+} as const
 
 export function ProjectForm() {
   const { slug: org } = useParams<{ slug: string }>()
-
-  const [formState, handleSubmit, isPending] = useFormState(
-    createProjectAction,
-    () => {
-      startTransition(() => {
-        queryClient.invalidateQueries({
-          queryKey: [org, 'projects'],
-        })
-      })
-    },
-  )
-
-  const { errors, message, success } = formState
-
-  const [checkboxState, setCheckboxState] = useState<CheckboxState>({
-    cityProjectApproved: false,
-    cndRF: false,
-    cnoRegistered: false,
-    isLate: false,
-    projectInExecution: false,
-    SEROmeasured: false,
-    protocolSubmittedToCity: false,
-    taxesCollected: false,
+  const [formState, setFormState] = useState({
+    success: false,
+    message: '',
+    errors: {} as Record<string, string>,
   })
 
-  const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, checked } = event.target
-    setCheckboxState((prev) => ({ ...prev, [name]: checked }))
-  }
+  const [submitHandler, isPending] = useFormState(
+    async (formData: FormData) => {
+      const result = await createProjectAction(formData)
+      return result // Retorna o `FormState` esperado
+    },
+    () => {
+      queryClient.invalidateQueries({ queryKey: [org, 'projects'] })
+    },
+  )
 
   const handleSubmitWithValidation = async (
     e: React.FormEvent<HTMLFormElement>,
   ) => {
     e.preventDefault()
-
-    const formElement = e.currentTarget
+    const formData = new FormData(e.currentTarget)
 
     try {
-      const formData = new FormData(formElement)
+      const parsedData = Object.fromEntries(formData.entries())
+      const booleanFields = [
+        'cityProjectApproved',
+        'cndRF',
+        'cnoRegistered',
+        'isLate',
+        'projectInExecution',
+        'SEROmeasured',
+        'protocolSubmittedToCity',
+        'taxesCollected',
+      ]
 
-      const formDataJS = {
-        name: formData.get('name') as string,
-        description: formData.get('description') as string,
-        phase: formData.get('phase') as string,
-        timeline: {
-          startDate: (formData.get('timeline[startDate]') as string) || null,
-          endDate: (formData.get('timeline[endDate]') as string) || null,
-        },
-        ...checkboxState,
+      booleanFields.forEach((field) => {
+        parsedData[field] = formData.get(field) === 'on' ? 'true' : 'false'
+      })
+
+      const validatedData = ProjectFormSchema.parse(parsedData)
+
+      const preparedFormData = new FormData()
+      Object.entries(validatedData).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          preparedFormData.append(key, value.toString())
+        }
+      })
+
+      const result = await submitHandler(preparedFormData)
+
+      setFormState({
+        success: result.success,
+        message: result.message,
+        errors: result.errors,
+      })
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        const errors: Record<string, string> = {}
+        for (const key in err.flatten().fieldErrors) {
+          const fieldError = err.flatten().fieldErrors[key]
+          if (fieldError && fieldError.length > 0) {
+            errors[key] = fieldError[0]
+          }
+        }
+
+        setFormState({
+          success: false,
+          message: 'Validation errors occurred.',
+          errors,
+        })
+      } else {
+        setFormState({
+          success: false,
+          message: 'Unexpected error occurred.',
+          errors: {},
+        })
       }
-
-      console.log('Processed FormData:', formDataJS)
-
-      await handleSubmit(e)
-      console.log('Form successfully submitted!')
-    } catch (error) {
-      console.error('Error submitting form:', error)
     }
   }
 
   return (
-    <form onSubmit={handleSubmitWithValidation} className="space-y-4">
-      {message && (
-        <Alert variant={success ? 'success' : 'destructive'}>
-          <AlertTriangle className="size-4" />
-          <AlertTitle>
-            {success ? 'Success!' : 'Save project failed!'}
-          </AlertTitle>
-          <AlertDescription>
-            <p>{message}</p>
-          </AlertDescription>
+    <form onSubmit={handleSubmitWithValidation} className="space-y-6">
+      {formState.message && (
+        <Alert variant={formState.success ? 'success' : 'destructive'}>
+          <AlertTitle>{formState.success ? 'Success!' : 'Error'}</AlertTitle>
+          <AlertDescription>{formState.message}</AlertDescription>
         </Alert>
       )}
 
-      <div className="space-y-1">
-        <Label htmlFor="name">Project Name</Label>
-        <Input name="name" id="name" />
-        {errors?.name && (
-          <p className="text-xs font-medium text-red-500 dark:text-red-400">
-            {errors.name[0]}
-          </p>
-        )}
-      </div>
-
-      <div className="space-y-1">
-        <Label htmlFor="description">Description</Label>
-        <Textarea name="description" id="description" />
-        {errors?.description && (
-          <p className="text-xs font-medium text-red-500 dark:text-red-400">
-            {errors.description[0]}
-          </p>
-        )}
-      </div>
-
-      <div className="space-y-1">
-        <Label htmlFor="phase">Phase:</Label>
-        <select className="text-sm" name="phase" id="phase">
-          <option value="PRELIMINARY">Preliminary</option>
-          <option value="STUDY">Study</option>
-          <option value="CORRECTION">Correction</option>
-        </select>
-      </div>
-
-      <div className="space-y-1">
-        <Label htmlFor="timelineStartDate">
-          Timeline Start Date (Optional)
-        </Label>
-        <Input type="date" name="timeline[startDate]" id="timelineStartDate" />
-      </div>
-
-      <div className="space-y-1">
-        <Label htmlFor="timelineEndDate">Timeline End Date (Optional)</Label>
-        <Input type="date" name="timeline[endDate]" id="timelineEndDate" />
-      </div>
+      <FormField
+        id="name"
+        label="Project Name"
+        type="text"
+        error={formState.errors.name}
+      />
+      <FormField
+        id="description"
+        label="Description"
+        type="textarea"
+        error={formState.errors.description}
+      />
+      <FormField
+        id="phase"
+        label="Phase"
+        type="select"
+        options={[
+          { value: 'PRELIMINARY', label: 'Preliminary' },
+          { value: 'STUDY', label: 'Study' },
+          { value: 'CORRECTION', label: 'Correction' },
+        ]}
+      />
+      <FormField
+        id="timelineStartDate"
+        label="Timeline Start Date (Optional)"
+        type="date"
+      />
+      <FormField
+        id="timelineEndDate"
+        label="Timeline End Date (Optional)"
+        type="date"
+      />
 
       <div className="grid grid-cols-2 gap-4">
-        {Object.keys(checkboxState).map((key) => (
+        {Object.entries(checkboxLabels).map(([key, label]) => (
           <label key={key} htmlFor={key}>
-            <input
-              className="mr-2"
-              type="checkbox"
-              name={key}
-              id={key}
-              checked={checkboxState[key as keyof CheckboxState]}
-              onChange={handleCheckboxChange}
-            />
-            {checkboxLabels[key as keyof CheckboxState]}
+            <input type="checkbox" id={key} name={key} className="mr-2" />
+            {label}
           </label>
         ))}
       </div>
 
-      {Object.keys(errors || {}).map((key) =>
-        checkboxLabels[key as keyof CheckboxState] ? (
-          <p
-            key={key}
-            className="text-xs font-medium text-red-500 dark:text-red-400"
-          >
-            {checkboxLabels[key as keyof CheckboxState]}: {errors?.[key]?.[0]}
-          </p>
-        ) : null,
-      )}
-
-      <Button className="w-full" type="submit" disabled={isPending}>
-        {isPending ? (
-          <Loader2 className="size-4 animate-spin" />
-        ) : (
-          'Save project'
-        )}
+      <Button type="submit" disabled={!!isPending}>
+        {isPending ? <Loader2 className="animate-spin" /> : 'Save Project'}
       </Button>
     </form>
+  )
+}
+
+function FormField({
+  id,
+  label,
+  type,
+  options,
+  error,
+}: {
+  id: string
+  label: string
+  type: 'text' | 'textarea' | 'date' | 'select'
+  options?: { value: string; label: string }[]
+  error?: string
+}) {
+  return (
+    <div>
+      <Label htmlFor={id}>{label}</Label>
+      {type === 'textarea' ? (
+        <Textarea id={id} name={id} />
+      ) : type === 'select' ? (
+        <select id={id} name={id} className="text-sm">
+          {options?.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      ) : (
+        <Input type={type} id={id} name={id} />
+      )}
+      {error && <p className="text-sm text-red-500">{error}</p>}
+    </div>
   )
 }
