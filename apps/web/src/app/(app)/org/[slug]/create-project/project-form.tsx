@@ -16,14 +16,14 @@ import { queryClient } from '@/lib/react-query'
 import { createProjectAction } from './actions'
 
 type CheckboxState = {
-  cityProjectApproved?: boolean
-  cndRF?: boolean
-  cnoRegistered?: boolean
-  isLate?: boolean
-  projectInExecution?: boolean
-  SEROmeasured?: boolean
-  protocolSubmittedToCity?: boolean
-  taxesCollected?: boolean
+  cityProjectApproved?: string
+  cndRF?: string
+  cnoRegistered?: string
+  isLate?: string
+  projectInExecution?: string
+  SEROmeasured?: string
+  protocolSubmittedToCity?: string
+  taxesCollected?: string
 }
 
 const checkboxLabels: Record<keyof CheckboxState, string> = {
@@ -51,20 +51,16 @@ export function ProjectForm() {
 
   const { errors, message, success } = formState
 
-  const [checkboxState, setCheckboxState] = useState<CheckboxState>({
-    cityProjectApproved: false,
-    cndRF: false,
-    cnoRegistered: false,
-    isLate: false,
-    projectInExecution: false,
-    SEROmeasured: false,
-    protocolSubmittedToCity: false,
-    taxesCollected: false,
-  })
+  const [checkboxState, setCheckboxState] = useState<CheckboxState>(
+    Object.keys(checkboxLabels).reduce((acc, key) => {
+      acc[key as keyof CheckboxState] = 'false'
+      return acc
+    }, {} as CheckboxState),
+  )
 
   const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = event.target
-    setCheckboxState((prev) => ({ ...prev, [name]: checked }))
+    setCheckboxState((prev) => ({ ...prev, [name]: checked.toString() }))
   }
 
   const handleSubmitWithValidation = async (
@@ -85,15 +81,7 @@ export function ProjectForm() {
           startDate: formData.get('timeline[startDate]') as string,
           endDate: formData.get('timeline[endDate]') as string,
         },
-        cityProjectApproved: formData.get('cityProjectApproved') === 'true',
-        cndRF: formData.get('cndRF') === 'true',
-        cnoRegistered: formData.get('cnoRegistered') === 'true',
-        isLate: formData.get('isLate') === 'true',
-        projectInExecution: formData.get('projectInExecution') === 'true',
-        SEROmeasured: formData.get('SEROmeasured') === 'true',
-        protocolSubmittedToCity:
-          formData.get('protocolSubmittedToCity') === 'true',
-        taxesCollected: formData.get('taxesCollected') === 'true',
+        ...checkboxState,
       }
 
       console.log('data => ', data)
@@ -175,7 +163,7 @@ export function ProjectForm() {
               type="checkbox"
               name={key}
               id={key}
-              checked={checkboxState[key as keyof CheckboxState]}
+              checked={checkboxState[key as keyof CheckboxState] === 'true'}
               onChange={handleCheckboxChange}
             />
             {checkboxLabels[key as keyof CheckboxState]}

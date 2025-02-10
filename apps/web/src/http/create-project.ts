@@ -6,14 +6,14 @@ interface CreateProjectRequest {
   description: string
   phase: 'PRELIMINARY' | 'STUDY' | 'CORRECTION'
   timelineId?: string
-  cityProjectApproved: boolean
-  cndRF: boolean
-  cnoRegistered: boolean
-  isLate: boolean
-  projectInExecution: boolean
-  SEROmeasured: boolean
-  protocolSubmittedToCity: boolean
-  taxesCollected: boolean
+  cityProjectApproved: string
+  cndRF: string
+  cnoRegistered: string
+  isLate: string
+  projectInExecution: string
+  SEROmeasured: string
+  protocolSubmittedToCity: string
+  taxesCollected: string
   timeline?: {
     startDate?: string
     endDate?: string

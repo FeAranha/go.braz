@@ -9,18 +9,18 @@ import { createProject } from '@/http/create-project'
 const projectSchema = z.object({
   name: z
     .string()
-    .min(4, { message: 'Please, incluide at least 4 characters.' }),
+    .min(4, { message: 'Please, include at least 4 characters.' }),
   description: z.string(),
   phase: z.enum(['PRELIMINARY', 'STUDY', 'CORRECTION']),
   timelineId: z.string().uuid().optional(),
-  cityProjectApproved: z.boolean(),
-  cndRF: z.boolean(),
-  cnoRegistered: z.boolean(),
-  isLate: z.boolean(),
-  projectInExecution: z.boolean(),
-  SEROmeasured: z.boolean(),
-  protocolSubmittedToCity: z.boolean(),
-  taxesCollected: z.boolean(),
+  cityProjectApproved: z.enum(['true', 'false']),
+  cndRF: z.enum(['true', 'false']),
+  cnoRegistered: z.enum(['true', 'false']),
+  isLate: z.enum(['true', 'false']),
+  projectInExecution: z.enum(['true', 'false']),
+  SEROmeasured: z.enum(['true', 'false']),
+  protocolSubmittedToCity: z.enum(['true', 'false']),
+  taxesCollected: z.enum(['true', 'false']),
   timeline: z
     .object({
       startDate: z.string().optional(),
@@ -32,7 +32,31 @@ const projectSchema = z.object({
 export async function createProjectAction(data: FormData) {
   console.log('Received data=>', Object.fromEntries(data))
 
-  const result = projectSchema.safeParse(Object.fromEntries(data))
+  const parsedData: { [key: string]: FormDataEntryValue } =
+    Object.fromEntries(data)
+
+  const booleanFields = [
+    'cityProjectApproved',
+    'cndRF',
+    'cnoRegistered',
+    'isLate',
+    'projectInExecution',
+    'SEROmeasured',
+    'protocolSubmittedToCity',
+    'taxesCollected',
+  ]
+
+  booleanFields.forEach((field) => {
+    if (parsedData[field] === undefined) {
+      parsedData[field] = 'false'
+    } else if (parsedData[field] === 'on') {
+      parsedData[field] = 'true'
+    } else if (parsedData[field] === 'off') {
+      parsedData[field] = 'false'
+    }
+  })
+
+  const result = projectSchema.safeParse(parsedData)
 
   if (!result.success) {
     const errors = result.error.flatten().fieldErrors
