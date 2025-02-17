@@ -18,8 +18,6 @@ export function useFormState(
   )
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    console.log('Tipo de evento=>', event)
-
     if (event && typeof event.preventDefault === 'function') {
       event.preventDefault()
     } else {
@@ -33,7 +31,6 @@ export function useFormState(
     startTransition(async () => {
       try {
         const state = await action(data)
-        console.log('state=>', state)
 
         if (state.success && onSuccess) {
           await onSuccess()

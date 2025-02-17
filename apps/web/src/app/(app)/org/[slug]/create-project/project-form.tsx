@@ -84,8 +84,6 @@ export function ProjectForm() {
         ...checkboxState,
       }
 
-      console.log('data => ', data)
-
       await handleSubmit(e)
     } catch (error) {
       console.error('Erro ao enviar formulário:', error)
