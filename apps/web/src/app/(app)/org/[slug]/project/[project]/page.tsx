@@ -1,11 +1,11 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { ArrowRight } from 'lucide-react'
 import { useParams } from 'next/navigation'
 
-import { getCurrentOrg } from '@/auth/auth'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
@@ -15,17 +15,37 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { getProject } from '@/http/get-project'
+import { getProjectAction } from './actions'
 
 dayjs.extend(relativeTime)
 
-export default async function Project() {
-  const { slug } = useParams<{
-    slug: string
-    project: string
-  }>()
-  const currentOrg = getCurrentOrg()
-  const project = await getProject(currentOrg!, slug)
+export default function Project() {
+  const { slug } = useParams<{ slug: string }>()
+  const [project, setProject] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchProject() {
+      try {
+        setLoading(true)
+        const data = await getProjectAction(slug)
+        setProject(data)
+      } catch (err) {
+        setError('Erro ao carregar projeto')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (slug) {
+      fetchProject()
+    }
+  }, [slug])
+
+  if (loading) return <p>Carregando...</p>
+  if (error) return <p className="text-red-500">{error}</p>
+  if (!project) return <p>Projeto não encontrado</p>
 
   return (
     <div className="space-y-4 p-4">
