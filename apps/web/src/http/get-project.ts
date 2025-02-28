@@ -15,13 +15,31 @@ interface GetProjectResponse {
       name: string | null
       avatarUrl: string | null
     }
+    phase: boolean
+    timelineId?: string
+    cityProjectApproved: boolean
+    cndRF: boolean
+    cnoRegistered: boolean
+    isLate: boolean
+    projectInExecution: boolean
+    SEROmeasured: boolean
+    protocolSubmittedToCity: boolean
+    taxesCollected: boolean
+    timeline?: {
+    startDate?: string
+    endDate?: string
+  }
   }
 }
 
-export async function getProject(orgSlug: string, projectSlug: string) {
-  const result = await api
-    .get(`organizations/${orgSlug}/projects/${projectSlug}`)
-    .json<GetProjectResponse>()
+export async function getProject(org: string, projectSlug: string) {
+  try {
+    const result = await api
+      .get(`organizations/${org}/projects/${projectSlug}`)
+      .json<GetProjectResponse>()
 
-  return result.project
+    return result.project
+  }	catch (error) {
+    throw error
+  }
 }

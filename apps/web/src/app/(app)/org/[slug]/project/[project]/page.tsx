@@ -19,9 +19,36 @@ import { getProjectAction } from './actions'
 
 dayjs.extend(relativeTime)
 
+interface ProjectProps {
+    description: string
+    slug: string
+    id: string
+    name: string
+    avatarUrl: string | null
+    organizationId: string
+    ownerId: string
+    createdAt: string
+    owner: {
+      id: string
+      name: string | null
+      avatarUrl: string | null
+     }
+    phase: boolean
+    timelineId?: string
+    cityProjectApproved: boolean
+    cndRF: boolean
+    cnoRegistered: boolean
+    isLate: boolean
+    projectInExecution: boolean
+    SEROmeasured: boolean
+    protocolSubmittedToCity: boolean
+    taxesCollected: boolean
+  }
+
+
 export default function Project() {
-  const { slug } = useParams<{ slug: string }>()
-  const [project, setProject] = useState<any>(null)
+  const { slug, project } = useParams<{ slug: string, project: string }>()
+  const [projectData, setProjectData] = useState<ProjectProps | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -29,8 +56,8 @@ export default function Project() {
     async function fetchProject() {
       try {
         setLoading(true)
-        const data = await getProjectAction(slug)
-        setProject(data)
+        const data = await getProjectAction(slug, project)
+        setProjectData(data)
       } catch (err) {
         setError('Erro ao carregar projeto')
       } finally {
@@ -38,37 +65,37 @@ export default function Project() {
       }
     }
 
-    if (slug) {
+    if (slug && project) {
       fetchProject()
     }
-  }, [slug])
+  }, [slug, project])
 
   if (loading) return <p>Carregando...</p>
   if (error) return <p className="text-red-500">{error}</p>
-  if (!project) return <p>Projeto não encontrado</p>
-
+  if (!projectData) return <p>Projeto não encontrado</p>
+  console.log('projectData=>', projectData)
   return (
     <div className="space-y-4 p-4">
       <Card className="flex flex-col justify-between">
         <CardHeader>
-          <CardTitle className="text-xl font-medium">{project.name}</CardTitle>
+          <CardTitle className="text-xl font-medium">{projectData.name}</CardTitle>
           <CardDescription className="line-clamp-2 leading-relaxed">
-            {project.description}
+            {projectData.description}
           </CardDescription>
         </CardHeader>
         <CardFooter className="flex items-center gap-1.5">
           <Avatar className="size-4">
-            {project.owner.avatarUrl && (
-              <AvatarImage src={project.owner.avatarUrl} />
+            {projectData.owner.avatarUrl && (
+              <AvatarImage src={projectData.owner.avatarUrl} />
             )}
             <AvatarFallback />
           </Avatar>
 
           <span className="truncate text-xs text-muted-foreground">
             <span className="font-medium text-foreground">
-              {project.owner.name}
+              {projectData.owner.name}
             </span>{' '}
-            {dayjs(project.createdAt).fromNow()}
+            {dayjs(projectData.createdAt).fromNow()}
           </span>
 
           <Button size="xs" variant="outline" className="ml-auto">

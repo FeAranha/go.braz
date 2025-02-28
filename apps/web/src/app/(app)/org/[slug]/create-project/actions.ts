@@ -30,8 +30,6 @@ const projectSchema = z.object({
 })
 
 export async function createProjectAction(data: FormData) {
-  console.log('Received data=>', Object.fromEntries(data))
-
   const parsedData: { [key: string]: FormDataEntryValue } =
     Object.fromEntries(data)
 
