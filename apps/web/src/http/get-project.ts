@@ -26,9 +26,9 @@ interface GetProjectResponse {
     protocolSubmittedToCity: boolean
     taxesCollected: boolean
     timeline?: {
-    startDate?: string
-    endDate?: string
-  }
+      startDate?: string
+      endDate?: string
+    }
   }
 }
 
@@ -39,7 +39,8 @@ export async function getProject(org: string, projectSlug: string) {
       .json<GetProjectResponse>()
 
     return result.project
-  }	catch (error) {
+  } catch (error) {
+    console.log(error)
     throw error
   }
 }

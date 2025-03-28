@@ -15,6 +15,20 @@ interface GetProjectsResponse {
       name: string | null
       avatarUrl: string | null
     }
+    phase: boolean
+    timelineId?: string
+    cityProjectApproved: boolean
+    cndRF: boolean
+    cnoRegistered: boolean
+    isLate: boolean
+    projectInExecution: boolean
+    SEROmeasured: boolean
+    protocolSubmittedToCity: boolean
+    taxesCollected: boolean
+    timeline?: {
+      startDate?: string
+      endDate?: string
+    }
   }[]
 }
 
