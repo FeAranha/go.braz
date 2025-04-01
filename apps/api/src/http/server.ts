@@ -43,7 +43,7 @@ import { rejectInvite } from './routes/invites/reject-invite'
 import { revokeInvite } from './routes/invites/revoke-invite'
 import { createOrganization } from './routes/orgs/create-organization'
 
-const app = fastify().withTypeProvider<ZodTypeProvider>()
+const app = fastify()
 
 app.setSerializerCompiler(serializerCompiler)
 app.setValidatorCompiler(validatorCompiler)
@@ -72,11 +72,15 @@ app.register(fastifySwagger, {
 
 app.register(fastifySwaggerUI, {
   routePrefix: '/docs',
+  staticCSP: true,
+  transformStaticCSP: (header: string) => header,
 })
 
 app.register(fastifyJwt, {
   secret: env.JWT_SECRET,
 })
+
+app.withTypeProvider<ZodTypeProvider>()
 
 app.register(fastifyCors)
 
