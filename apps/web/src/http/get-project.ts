@@ -15,7 +15,7 @@ interface GetProjectResponse {
       name: string | null
       avatarUrl: string | null
     }
-    phase: boolean
+    phase: string
     timelineId?: string
     cityProjectApproved: boolean
     cndRF: boolean

@@ -1,0 +1,25 @@
+  description: string ok
+  slug: string não precisa
+  id: string não precisa
+  name: string ok
+  - avatarUrl: string | null 
+  organizationId: string não precisa
+  ownerId: string não precisa
+  createdAt: string ok
+  owner: {
+    id: string não precisa
+    name: string | null ok
+    avatarUrl: string | null ok
+  }
+  phase: boolean ok
+  - timelineId?: string
+  cityProjectApproved: boolean ok
+  cndRF: boolean ok
+  cnoRegistered: boolean ok
+  isLate: boolean ok
+  projectInExecution: boolean ok
+  SEROmeasured: boolean ok
+  protocolSubmittedToCity: boolean ok
+  taxesCollected: boolean ok
+
+  PS: a fase do projeto esta como boolean mas é uma string conforme DB.

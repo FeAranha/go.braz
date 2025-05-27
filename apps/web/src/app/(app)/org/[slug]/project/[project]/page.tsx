@@ -33,7 +33,7 @@ interface ProjectProps {
     name: string | null
     avatarUrl: string | null
   }
-  phase: boolean
+  phase: string
   timelineId?: string
   cityProjectApproved: boolean
   cndRF: boolean
@@ -72,7 +72,14 @@ export default function Project() {
   if (loading) return <p>Carregando...</p>
   if (error) return <p className="text-red-500">{error}</p>
   if (!projectData) return <p>Projeto não encontrado</p>
-  console.log('projectData=>', projectData)
+  console.log('projectData=>', {projectData})
+  
+  const phaseTranslations: Record<string, string> = {
+    PRELIMINARY: 'Preliminar',
+    STUDY: 'Estudo',
+    CORRECTION: 'Correção',
+  }
+  
   return (
     <div className="space-y-4 p-4">
       <Card className="flex flex-col justify-between">
@@ -86,19 +93,21 @@ export default function Project() {
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-1.5">
-            <span className="text-xs text-muted-foreground">Fase:</span>
+            <span className="text-xs text-muted-foreground">Fase: </span>
             <span className="text-xs font-medium">
-              {projectData.phase ? 'Ativa' : 'Inativa'}
+              {phaseTranslations[projectData.phase] || projectData.phase}
             </span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-xs text-muted-foreground">Cidade:</span>
-            <span className="text-xs font-medium">São Paulo</span>
+            <span className="text-xs text-muted-foreground">Aprovado pela prefeitura: </span>
+            <span className="text-xs font-medium">
+              {projectData.cityProjectApproved ? 'Aprovado' : 'Não aprovado'}
+            </span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-xs text-muted-foreground">Atrasado:</span>
+            <span className="text-xs text-muted-foreground">Projeto:</span>
             <span className="text-xs font-medium">
-              {projectData.isLate ? 'Sim' : 'Não'}
+              {projectData.isLate ? 'Atrasado' : 'Não atrasado'}
             </span>
           </div>
           <div className="flex items-center gap-1.5">
@@ -107,8 +116,37 @@ export default function Project() {
               {projectData.projectInExecution ? 'Sim' : 'Não'}
             </span>
           </div>
-          sero:
-          {projectData.SEROmeasured ? ' Sim' : ' Não'}
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-muted-foreground">SERO regular:</span>
+            <span className="text-xs font-medium">
+              {projectData.SEROmeasured ? 'Sim' : 'Não'}
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-muted-foreground">cndRF regular:</span>
+            <span className="text-xs font-medium">
+              {projectData.cndRF ? 'Sim' : 'Não'}
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-muted-foreground">CNO registrado:</span>
+            <span className="text-xs font-medium">
+              {projectData.cnoRegistered ? 'Sim' : 'Não'}
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-muted-foreground">Taxas coletas:</span>
+            <span className="text-xs font-medium">
+              {projectData.taxesCollected ? 'Sim' : 'Não'}
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-muted-foreground">Protocolo enviado para prefeitura:</span>
+            <span className="text-xs font-medium">
+              {projectData.protocolSubmittedToCity ? 'Sim' : 'Não'}
+            </span>
+          </div>
+          {projectData.timelineId}
         </CardContent>
         <CardFooter className="flex items-center gap-1.5">
           <Avatar className="size-4">

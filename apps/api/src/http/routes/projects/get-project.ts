@@ -7,6 +7,7 @@ import { BadRequestError } from '@/http/routes/_errors/bad-request-error'
 import { UnauthorizedError } from '@/http/routes/_errors/unauthorized-error'
 import { prisma } from '@/lib/prisma'
 import { getUserPermissions } from '@/utils/get-user-permissions'
+import { time } from 'console'
 
 export async function getProject(app: FastifyInstance) {
   app
@@ -32,6 +33,16 @@ export async function getProject(app: FastifyInstance) {
                 slug: z.string(),
                 avatarUrl: z.string().url().nullable(),
                 organizationId: z.string().uuid(),
+                phase: z.enum(['PRELIMINARY', 'STUDY', 'CORRECTION']),
+                timelineId: z.string().uuid().nullable(),
+                cityProjectApproved: z.boolean(),
+                cndRF: z.boolean(),
+                cnoRegistered: z.boolean(),
+                isLate: z.boolean(),
+                projectInExecution: z.boolean(),
+                SEROmeasured: z.boolean(),
+                protocolSubmittedToCity: z.boolean(),
+                taxesCollected: z.boolean(),
                 ownerId: z.string().uuid(),
                 owner: z.object({
                   id: z.string().uuid(),
@@ -66,6 +77,16 @@ export async function getProject(app: FastifyInstance) {
             ownerId: true,
             avatarUrl: true,
             organizationId: true,
+            phase: true,
+            timelineId: true,
+            cityProjectApproved: true,
+            cndRF: true,
+            cnoRegistered: true,
+            isLate: true,
+            projectInExecution: true,
+            SEROmeasured: true,
+            protocolSubmittedToCity: true,
+            taxesCollected: true,
             owner: {
               select: {
                 id: true,
